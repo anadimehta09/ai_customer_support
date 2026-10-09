@@ -1,3 +1,4 @@
+
 import time
 
 from google import genai
@@ -5,7 +6,6 @@ from google.genai import types
 
 from app.core.config import settings
 from app.prompts.support_prompts import SYSTEM_PROMPT
-from app.schemas.support import SupportResponse
 
 
 client = genai.Client(
@@ -13,27 +13,24 @@ client = genai.Client(
 )
 
 
-def analyze_customer_message(message: str) -> SupportResponse:
-
+def analyze_customer_message(message: str):
     last_error = None
 
     for attempt in range(3):
         try:
-            response = client.models.generate_content(
+            response = client.models.generate_content_stream(
                 model=settings.model_name,
-                contents=f"""
-{SYSTEM_PROMPT}
-
-Customer message:
-{message}
-""",
+                contents=message,
                 config=types.GenerateContentConfig(
-                    response_mime_type="application/json",
-                    response_schema=SupportResponse,
+                    system_instruction=SYSTEM_PROMPT,
                 ),
             )
 
-            return SupportResponse.model_validate_json(response.text)
+            for chunk in response:
+                if chunk.text:
+                    yield chunk.text
+
+            return
 
         except Exception as exc:
             last_error = exc
