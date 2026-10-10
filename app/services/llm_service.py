@@ -9,7 +9,10 @@ from app.prompts.support_prompts import SYSTEM_PROMPT
 
 
 client = genai.Client(
-    api_key=settings.gemini_api_key
+    api_key=settings.gemini_api_key,
+    http_options=types.HttpOptions(
+        timeout=30_000
+    )
 )
 
 
@@ -22,13 +25,14 @@ def analyze_customer_message(message: str):
                 model=settings.model_name,
                 contents=message,
                 config=types.GenerateContentConfig(
-                    system_instruction=SYSTEM_PROMPT,
-                ),
+                    system_instruction=SYSTEM_PROMPT
+                )
             )
 
             for chunk in response:
                 if chunk.text:
                     yield chunk.text
+                
 
             return
 
