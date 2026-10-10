@@ -32,7 +32,8 @@ def analyze_customer_message(message: str):
             for chunk in response:
                 if chunk.text:
                     yield chunk.text
-                
+                if chunk.usage_metadata:
+                    print("Token usage:", chunk.usage_metadata)
 
             return
 
